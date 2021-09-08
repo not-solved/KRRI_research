@@ -75,7 +75,7 @@ def read_Map():
         if line[0] == 'Base Minor':
             continue
         for loop in range(1, 41):
-            RSSI_MAP[idx][loop-1] = float(line[loop])
+            RSSI_MAP[idx][loop - 1] = float(line[loop])
         idx += 1
 
     map_read.close()
@@ -86,7 +86,7 @@ def get_location_by_RSSI(BLE_list):
     if len(BLE_list) == 0:
         return [0, 0]
     pq = PriorityQueue()
-    
+
     #       RSSI Map 대조 시작
     for loop in range(21, 61):
         dist = 0
@@ -128,8 +128,6 @@ def get_location_by_LC(LC_list):
 
 
 #       통합 데이터 읽고 분석하기
-# File_read = open('Location_unify_' + str(interval) + '.csv', 'r', encoding='utf-8')
-# File_read = open('BLE_record_temp.csv', 'r', encoding='utf-8')
 File_read = open('signal_record.csv', 'r', encoding='utf-8')
 rd = csv.reader(File_read)
 read_Map()
@@ -145,8 +143,8 @@ TIME_log = []
 
 x_ble = []
 y_ble = []
-x_lc  = []
-y_lc  = []
+x_lc = []
+y_lc = []
 
 BLE_base = -60
 LC_base = 500
@@ -155,60 +153,13 @@ time = 'no'
 #       파일 읽고 위치분석 시작
 for content in rd:
 
-    if content[0] == 'TIME':
-        continue
-
-    if content[0] != time:
-        if time == 'no':
-            time = content[0]
-        else:
-            time = content[0]
-            result = get_location_by_RSSI(BLE_content)
-            BLE_location.append(result)
-            x_ble.append(result[0])
-            y_ble.append(result[1])
-            BLE_content.clear()
-
-    BLE_content.append([int(content[2]), int(content[3])])
-
-plt.figure(figsize=(6, 14))
-plt.axis([0.0, 1.8, 0.0, 4.5])
-
-'''
-x_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8]
-y_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8, 2.025, 2.25,
-           2.475, 2.7, 2.925, 3.15, 3.375, 3.6, 3.825, 4.05, 4.275, 4.5]
-'''
-
-for time in range(len(x_ble)):
-
-    plt.figure(figsize=(6, 14))
-    plt.axis([0.0, 1.8, 0.0, 4.5])
-
-    x_label = [0.0, 0.45, 0.9, 1.35, 1.8]
-    y_label = [0.0, 0.45, 0.9, 1.35, 1.8, 2.25,
-               2.7, 3.15, 3.6, 4.05, 4.5]
-
-    plt.xticks(x_label)
-    plt.yticks(y_label)
-    plt.scatter(x_ble[time], y_ble[time], s=100)
-    plt.grid(True)
-    plt.title("LC location")
-    plt.savefig("BLE location " + str(time))
-    plt.close()
-
-
-'''
-    #   값이 아닌, 속성은 넘긴다
     if content[0] == 'reg_dt':
         continue
-        
-    TIME_log.append(content[0])
-    #   reg_dt, (rssi, lc1, lc2, lc3, lc4)
+    
     for i in range(0, 40):
-        if float(content[i * 5 + 1]) > BLE_base and float(content[i * 5 + 1]) != 0:
-            BLE_content.append([i, float(content[i * 5 + 1])])
-        lc_value = [int(content[i * 5 + 2]), int(content[i * 5 + 3]), int(content[i * 5 + 4]), int(content[i * 5 + 5])]
+        if int(content[i + 140]) > BLE_base and float(content[i + 140]) != 0:
+            BLE_content.append([i, int(content[i * 5 + 1])])
+        lc_value = [int(content[i * 4 + 1]), int(content[i * 4 + 2]), int(content[i * 4 + 3]), int(content[i * 4 + 4])]
         if lc_value[0] > LC_base:
             LC_content.append([lc_value[0], i + 21, 0])
         if lc_value[1] > LC_base:
@@ -217,30 +168,27 @@ for time in range(len(x_ble)):
             LC_content.append([lc_value[2], i + 21, 2])
         if lc_value[3] > LC_base:
             LC_content.append([lc_value[3], i + 21, 3])
-
-    # BLE_location.append([content[0], get_location_by_RSSI(BLE_content)])
-    # LC_location.append([content[0], get_location_by_LC(LC_content)])
+    
+    #   시간 기록
+    TIME_log.append(content[0])
+    #   BLE 결과
     ble_result = get_location_by_RSSI(BLE_content)
     x_ble.append(ble_result[0])
     y_ble.append(ble_result[1])
+    #   LC 결과
     lc_result = get_location_by_LC(LC_content)
     x_lc.append(lc_result[0])
     y_lc.append(lc_result[1])
+
     BLE_content.clear()
     LC_content.clear()
 
 File_read.close()
+plt.axis([0.0, 1.8, 0.0, 4.5])
 
 plt.figure(figsize=(6, 14))
 plt.axis([0.0, 1.8, 0.0, 4.5])
-
-x_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8]
-y_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8, 2.025, 2.25,
-           2.475, 2.7, 2.925, 3.15, 3.375, 3.6, 3.825, 4.05, 4.275, 4.5]
-
-plt.figure(figsize=(6, 14))
-plt.axis([0.0, 1.8, 0.0, 4.5])
-
+'''
 x_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8]
 y_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8, 2.025, 2.25,
            2.475, 2.7, 2.925, 3.15, 3.375, 3.6, 3.825, 4.05, 4.275, 4.5]
@@ -252,21 +200,22 @@ plt.scatter(x_ble, y_ble, s=100)
 plt.grid(True)
 plt.title("LC location : " + str(TIME_log[0]))
 plt.show()
+'''
 
 for time in range(len(TIME_log)):
 
     plt.figure(figsize=(6, 14))
     plt.axis([0.0, 1.8, 0.0, 4.5])
 
-    x_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8]
-    y_label = [0.0, 0.225, 0.45, 0.675, 0.9, 1.125, 1.35, 1.575, 1.8, 2.025, 2.25,
-               2.475, 2.7, 2.925, 3.15, 3.375, 3.6, 3.825, 4.05, 4.275, 4.5]
+    x_label = [0.0, 0.45, 0.9, 1.35, 1.8]
+    y_label = [0.0, 0.45, 0.9, 1.35, 1.8, 2.25, 2.7,
+               3.15, 3.6, 4.05, 4.5]
 
     plt.xticks(x_label)
     plt.yticks(y_label)
     plt.scatter(x_lc[time], y_lc[time], s=100)
     plt.scatter(x_ble[time], y_ble[time], s=100)
     plt.grid(True)
-    plt.title("LC location : " + str(TIME_log[time]))
-    plt.show()
-'''
+    plt.title("location : " + str(TIME_log[time]))
+    plt.savefig("location_" + str(time) + ".png")
+    plt.close()
