@@ -1,6 +1,7 @@
 import threading
+import datetime
+
 import paho.mqtt.client as mqtt
-from socket import *
 import time
 import csv
 import json
@@ -31,7 +32,7 @@ received = [0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             #   RSSI (21 ~ 60)
-            -10000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
@@ -41,25 +42,6 @@ def MQTT_msg_parse(com, board, block1, block2, block3, block4):
         received[(int(i[43:45])-21)*4 + 2] = int(i[19:22])
         received[(int(i[43:45])-21)*4 + 3] = int(i[22:25])
         received[(int(i[43:45])-21)*4 + 4] = int(i[25:28])
-
-
-def BLE_msg_parse(recvData):
-    for i in range(161, 201):
-        received[i] = 0
-
-    idx = 0
-    while idx + 7 <= len(recvData):
-        back = idx
-        while recvData[back] != ':':
-            back += 1
-        minor = int(recvData[idx:back])
-        idx = back+1
-        back = idx
-        while recvData[back] != ',':
-            back += 1
-        rssi = int(recvData[idx:back])
-        idx = back + 2
-        received[minor + 140] = rssi * -1
 
 
 def on_connect(client, userdata, flags, rc):
@@ -85,20 +67,15 @@ def on_message(client, userdata, msg):
     MSG = msg.payload.decode('utf-8')
     if MSG[1] == 'm':
         MQTT_msg_parse(MSG[10:14], MSG[26:30], MSG[43:89], MSG[93:139], MSG[143:189], MSG[193:239])
-    else :
+    else:
         receivedJSON = json.loads(MSG)
         for i in range(21, 61):
             if receivedJSON.get(str(i)):
-                received[i + 141] = receivedJSON[str(i)]
+                received[i + 140] = receivedJSON[str(i)]
             else:
-                received[i + 141] = 0
+                received[i + 140] = 0
 
         print(received)
-
-
-
-def print_signal():
-    print(received)
 
 
 #   LC value read by subscribe mqtt
@@ -114,14 +91,16 @@ class MQTT_client(threading.Thread):
         self.client.on_publish = on_publish
         self.client.on_subscribe = on_subscribe
         self.client.on_message = on_message
-        print("MQTT LC subscriber is ready")
+        print("MQTT subscriber is ready")
 
     def run(self):
         self.client.connect('192.168.10.193', 1883)
         for s in subscribe:
             self.client.subscribe(s, 1)
         self.client.subscribe("pubBLE")
+        #   무한루프 형식으로 메시지를 읽는다.
         self.client.loop_forever()
+
 
 class concat_data(threading.Thread):
 
@@ -131,17 +110,8 @@ class concat_data(threading.Thread):
     def run(self):
         while True:
             print(received)
-            time.sleep(0.5)
 
 
-mqttThread = MQTT_client('mqtt')
-mqttThread.start()
-
-concatData = concat_data()
-# concatData.start()
-
-
-'''
 file_write = open("signal_record.csv", 'w', encoding='utf-8', newline='')
 wr = csv.writer(file_write)
 
@@ -157,10 +127,27 @@ for minor_number in range(21, 61):
 
 wr.writerow(Container)
 Container.clear()
-'''
+
+
+mqttThread = MQTT_client('mqtt')
+mqttThread.start()
+
+concatData = concat_data()
+# concatData.start()
+
+
+while True:
+    received[0] = datetime.datetime.now()
+    wr.writerow(received)
+    time.sleep(0.3)
+
+
+file_write.close()
 
 #   BLE server - socket
 '''
+from socket import *
+
 #   Socket server define
 host = "192.168.10.100"
 port = 3010
