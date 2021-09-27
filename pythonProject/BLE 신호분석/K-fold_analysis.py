@@ -4,7 +4,7 @@ import math
 import numpy as np
 from queue import PriorityQueue
 
-filePath = "C:/Users/lab_408/Downloads/pythonProject/BLE 신호분석"
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 
 RSSI_MAP = []
@@ -25,8 +25,13 @@ def initialize_rssi_map():
 
 #   RSSI 값을 이용한 Euclidean Distance 거리 계산 후 최소의 D 반환
 def get_distance_by_RSSI(test_set):
+
+    minors = []
+    for beacons in test_set:
+        minors.append(beacons[2])
+
     pq = PriorityQueue()
-    for i in range(21, 61):
+    for i in minors:
         dist = 0
         for j in test_set:
             dist += math.pow(RSSI_MAP[i - 21][j[2] - 21] - j[3], 2)
@@ -128,7 +133,7 @@ for loop in range(1, 11):
 
     for file in fileList:
         #   데이터 파일이 아니면 넘긴다
-        if len(file) < 20:
+        if len(file) != 25:
             continue
 
         RSSI_CNT = np.zeros(40)
@@ -138,7 +143,7 @@ for loop in range(1, 11):
         diff_time_cnt = 0
         total_cnt = 1
 
-        temp_file = open(file, 'r', encoding='utf-8')
+        temp_file = open(filePath + file, 'r', encoding='utf-8')
         rd = csv.reader(temp_file)
         time = "no record"
 
@@ -178,15 +183,22 @@ for loop in range(1, 11):
 
         temp_file.close()
 
+    write_file = open("K_fold_validation_" + str(loop) + '.csv', 'w', encoding='utf-8', newline='')
+    wr = csv.writer(write_file)
+
+
     #   n번째 K-fold 교차검증 결과 확인 및 블록 별 정확도 및 RMS 결과 확인
     acc, rms, currentResult = k_fold_validation_result(test_data)
     print("K - ", loop, "  \t\tAccuracy : ", acc, "\t\tRMS : ", rms)
     print("-------------------------------------------------------------")
+    wr.writerow(["Acc_total", acc, "RMS_total", rms])
+    wr.writerow(["Minor", "Accuracy", "RMS"])
 
     #   블록 별 정확도 및 RMS 결과 확인
     resultIdx = 21
     for tempResult in currentResult:
         print("\t\t", resultIdx, " -\tAccuracy : ", tempResult[0], "  \t\tRMS : ", tempResult[1])
+        wr.writerow([resultIdx, tempResult[0], tempResult[1]])
         resultIdx += 1
     print("=============================================================\n")
     if acc_data[0] < acc:
@@ -200,6 +212,8 @@ for loop in range(1, 11):
     if rms_data[1] > rms:
         rms_data[1] = rms
     rms_data[2] += rms
+
+    write_file.close()
 
 #   최종 결과 확인
 acc_data[2] = round(acc_data[2] / 10, 5)

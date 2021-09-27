@@ -67,7 +67,7 @@ def read_RSSI_MAP(fileName, map_name):
 
 #   Map 으로 사용할 파일 읽기
 file_name_list = ["RSSI_MAP.csv", "bias_adjust_avg.csv", "bias_adjust_mid.csv"]
-file_name = file_name_list[2]
+file_name = file_name_list[0]
 
 #   RSSI map 그리기
 read_RSSI_MAP("RSSI_MAP.csv", RSSImap)
@@ -83,14 +83,11 @@ for minor in range(0, 40):
     minor_bias.append(RSSImap[minor][minor] - RSSImap_bias[minor][minor])
 
 
-filePath = os.getcwd()
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 for file in fileList:
-    #   데이터 파일만 읽는다.
-    if len(file) != 25:
-        continue
 
-    Read = open(file, 'r', encoding='utf-8')
+    Read = open(filePath + file, 'r', encoding='utf-8')
     rd = csv.reader(Read)
 
     time = ""

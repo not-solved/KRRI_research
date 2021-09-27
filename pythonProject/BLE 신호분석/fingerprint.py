@@ -5,8 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from queue import PriorityQueue
 
-coord_idx = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1],
-       [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1],
+coord_idx = [
        [1, 4], [1, 3], [2, 3], [2, 4], [3, 4], [3, 3], [4, 3], [4, 4], [5,  4], [5,  3],
        [6, 3], [6, 4], [7, 4], [7, 3], [8, 3], [8, 4], [9, 4], [9, 3], [10, 3], [10, 4],
        [1, 2], [1, 1], [2, 1], [2, 2], [3, 2], [3, 1], [4, 1], [4, 2], [5,  2], [5,  1],
@@ -31,27 +30,31 @@ def get_distance(idx1, idx2):
 
 #       RSSI 값을 이용한 Euclidean Distance 거리 계산 후 최소의 D 반환
 def get_distance_by_RSSI(beaconList):
+    minors = []
+    for beacons in beaconList:
+        minors.append(beacons[0])
+
     pq = PriorityQueue()
-    for i in range(21, 61):
+    for i in minors:
         dist = 0
         for j in beaconList:
-            dist += math.pow(RSSImap[i - 21][j[0] - 21] - j[1], 2)
+            dist += math.sqrt(pow(RSSImap[i - 21][j[0] - 21] - j[1], 2))
 
         #   (거리값, 해당 기준 위치)
         #   거리 기준으로 정렬하여, 우선순위 큐 머리에는 최소 거리에 해당하는 값이 있다.
-        pq.put([math.sqrt(dist), i])
+        pq.put([dist, i])
 
     return pq.get()
 
 #       RSSI Map 그리기
 '''
 #       Read data
-filePath = "C:/Users/lab_408/Downloads/pythonProject/BLE 신호분석"
+filePath = os.getcwd()
 fileList = os.listdir(filePath)
 
 for file in fileList:
     #   데이터 파일만 읽는다.
-    if len(file) < 20:
+    if len(file) != 25:
         continue
     #   RSSI 신호 기록 파일 열기
     fread = open(file, 'r', encoding='utf-8')
@@ -108,12 +111,19 @@ for line in rd:
 fread.close()
 
 
-filePath = "C:/Users/lab_408/Downloads/pythonProject/BLE 신호분석"
+filePath = os.getcwd()
 fileList = os.listdir(filePath)
+
+MAX_ACC = 0
+MIN_ACC = 100
+AVG_ACC = 0
+MAX_RMS = 0
+MIN_RMS = 100
+AVG_RMS = 0
 
 for file in fileList:
     #   데이터 파일만 읽는다.
-    if len(file) < 20:
+    if len(file) != 25:
         continue
     Read = open(file, 'r', encoding='utf-8')
     rd = csv.reader(Read)
@@ -152,8 +162,33 @@ for file in fileList:
     RMS = 0.0
     dist = 0
     for i in rmsList:
-        dist = get_distance(int(file[7:9]), i)
+        dist = get_distance(int(file[7:9]) - 21, i - 21)
         RMS += dist
 
     RMS /= len(rmsList)
+
+    if MAX_RMS < math.sqrt(RMS):
+        MAX_RMS = math.sqrt(RMS)
+    if MIN_RMS > math.sqrt(RMS):
+        MIN_RMS = math.sqrt(RMS)
+    AVG_RMS += math.sqrt(RMS)
+
+    if MAX_ACC < round(correct / cnt, 5):
+        MAX_ACC = round(correct / cnt, 5)
+    if MIN_ACC > round(correct / cnt, 5):
+        MIN_ACC = round(correct / cnt, 5)
+    AVG_ACC += round(correct / cnt, 5)
+
     print(file[7:9], "\t", round(correct / cnt, 5), "\t", round(math.sqrt(RMS), 5))
+
+
+print('\n====================================\n')
+print("MAX ACC : ", MAX_ACC)
+print("MIN ACC : ", MIN_ACC)
+print("AVG ACC : ", round(AVG_ACC / 40, 5))
+
+print('\n====================================\n')
+print("MAX RMS : ", round(MAX_RMS, 5))
+print("MIN RMS : ", round(MIN_RMS, 5))
+print("AVG RMS : ", round(AVG_RMS / 40, 5))
+

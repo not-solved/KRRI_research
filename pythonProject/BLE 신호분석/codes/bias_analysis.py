@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-filePath = "/데이터 분석"
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 
 rssi_recordAvg = np.empty(40)
@@ -12,12 +12,9 @@ rssi_recordMax = np.empty(40)
 rssi_recordMin = np.empty(40)
 
 for file in fileList:
-    if file == 'record_analysis.py' or file == 'bias_analysis.py':
-        continue
 
-    fread = open(file, 'r', encoding='utf-8')
+    fread = open(filePath + file, 'r', encoding='utf-8')
     rd = csv.reader(fread)
-
 
     rssi_idx = ['21', '22', '23', '24', '25', '26', '27', '28', '29', '30',
                 '31', '32', '33', '34', '35', '36', '37', '38', '39', '40',

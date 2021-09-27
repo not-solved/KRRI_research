@@ -22,11 +22,13 @@ for i in range(0, 61):
 def get_distance(idx1, idx2):
     return pow((idx[idx1][0] - idx[idx2][0]) * 0.45, 2) + pow((idx[idx1][1] - idx[idx2][1]) * 0.45, 2)
 
+
 def get_distance_by_coord(coord1, coord2):
     return pow((coord1[0] - coord2[0]) * 0.45, 2) + pow((coord1[1] - coord2[1]) * 0.45, 2)
 
+
 #      파일 열기
-filePath = "C:/Users/lab_408/Downloads/pythonProject/데이터 분석"
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 
 rmsList = []
@@ -38,9 +40,8 @@ for file in fileList:
     if len(file) < 20:
         continue
 
-    fread = open(file, 'r', encoding='utf-8')
+    fread = open(filePath + file, 'r', encoding='utf-8')
     rd = csv.reader(fread)
-
 
     time = ""
     target = ""

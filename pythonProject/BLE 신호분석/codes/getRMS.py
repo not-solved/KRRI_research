@@ -52,7 +52,7 @@ def record_distance_vector(Matrix, list):
 
 
 #      파일 열기
-filePath = "/데이터 분석"
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 
 rmsList = []
@@ -61,10 +61,8 @@ minList = []
 idxList = []
 coordList = []
 for file in fileList:
-    if len(file) < 15:
-        continue
 
-    fread = open(file, 'r', encoding='utf-8')
+    fread = open(filePath + file, 'r', encoding='utf-8')
     rd = csv.reader(fread)
 
     time = ""

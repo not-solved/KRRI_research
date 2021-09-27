@@ -4,14 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-filePath = "/데이터 분석"
+filePath = os.getcwd() + '/Dataset/'
 fileList = os.listdir(filePath)
 
 for file in fileList:
-    if file == 'record_analysis.py' or file == 'bias_analysis.py':
-        continue
 
-    fread = open(file, 'r', encoding='utf-8')
+    fread = open(filePath + file, 'r', encoding='utf-8')
     rd = csv.reader(fread)
     # fwrite = open(file[:9] + '_analysis.csv', 'w', encoding='utf-8')
     # wr = csv.writer(fwrite, lineterminator='\n')
